@@ -57,6 +57,12 @@ public class UserService {
         if (request.getSkills() != null) {
             user.setSkills(request.getSkills());
         }
+        if (request.getInterests() != null) {
+            user.setInterests(request.getInterests());
+        }
+        if (request.getCareerGoals() != null) {
+            user.setCareerGoals(request.getCareerGoals());
+        }
         if (request.getGithub() != null) {
             user.setGithub(request.getGithub());
         }

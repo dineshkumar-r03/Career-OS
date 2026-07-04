@@ -19,7 +19,9 @@ import {
   ChevronDown,
   Zap,
   Settings,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  Brain
 } from 'lucide-react';
 import notificationService from '../../services/notificationService';
 import toast from 'react-hot-toast';
@@ -159,6 +161,8 @@ const Navbar = () => {
   const navigation = [
     { name: 'Home', href: '/home', icon: Home },
     { name: 'Feed', href: '/feed', icon: BookOpen },
+    { name: 'Career AI', href: '/career-agent', icon: Sparkles },
+    { name: 'AI Mentor', href: '/career-mentor', icon: Brain },
     { name: 'Messages', href: '/messages', icon: MessageSquare },
     { name: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
   ];

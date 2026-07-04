@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, GraduationCap, Github, Linkedin, Mail, Users, BookOpen, Heart, MessageSquare } from 'lucide-react';
+import { MapPin, GraduationCap, Github, Linkedin, Mail, Users, BookOpen, Heart, MessageSquare, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -72,6 +72,44 @@ const ProfileCard = ({ user, isOwnProfile, onFollow, onUnfollow, isFollowing }) 
               </span>
             ))}
           </div>
+        )}
+
+        {/* Interests */}
+        {user?.interests && (
+          <div className="mt-4 text-center">
+            <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Interests</h4>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {user.interests.split(',').map((interest, index) => (
+                <span
+                  key={index}
+                  className="px-2.5 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-semibold border border-purple-100 dark:border-purple-900/30"
+                >
+                  {interest.trim()}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Career Goals */}
+        {user?.careerGoals && (
+          <div className="mt-4 text-center px-2">
+            <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Career Goals</h4>
+            <p className="text-sm italic text-slate-600 dark:text-slate-350 leading-relaxed">
+              "{user.careerGoals}"
+            </p>
+          </div>
+        )}
+
+        {/* AI Career Guidance Button */}
+        {isOwnProfile && (
+          <Link
+            to="/career-agent"
+            className="mt-5 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-sm hover:shadow transition-all duration-150 active:scale-[0.98]"
+          >
+            <Sparkles className="w-4 h-4 text-white animate-pulse" />
+            <span>AI Career Guidance</span>
+          </Link>
         )}
 
         {/* Social Links */}

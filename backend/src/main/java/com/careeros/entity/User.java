@@ -48,6 +48,12 @@ public class User implements UserDetails {
     @Column(length = 500)
     private String skills;
     
+    @Column(length = 1000)
+    private String interests;
+    
+    @Column(length = 1000)
+    private String careerGoals;
+    
     private String github;
     private String linkedin;
     @Column(columnDefinition = "LONGTEXT")

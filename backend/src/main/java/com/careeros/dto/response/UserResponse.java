@@ -15,6 +15,8 @@ public class UserResponse {
     private Integer graduationYear;
     private String bio;
     private String skills;
+    private String interests;
+    private String careerGoals;
     private String github;
     private String linkedin;
     private String profilePicture;
@@ -34,6 +36,8 @@ public class UserResponse {
         response.setGraduationYear(user.getGraduationYear());
         response.setBio(user.getBio());
         response.setSkills(user.getSkills());
+        response.setInterests(user.getInterests());
+        response.setCareerGoals(user.getCareerGoals());
         response.setGithub(user.getGithub());
         response.setLinkedin(user.getLinkedin());
         response.setProfilePicture(user.getProfilePicture());

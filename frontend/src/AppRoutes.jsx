@@ -22,6 +22,8 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import NotFoundPage from './pages/NotFoundPage';
 import PrivateRoute from './components/common/PrivateRoute';
+import CareerAgentPage from './pages/CareerAgentPage';
+import CareerMentorPage from './pages/CareerMentorPage';
 
 const AppRoutes = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -58,6 +60,8 @@ const AppRoutes = () => {
         <Route path="/bookmarks" element={<MainLayout><BookmarksPage /></MainLayout>} />
         <Route path="/messages" element={<MainLayout><MessagesPage /></MainLayout>} />
         <Route path="/search" element={<MainLayout><SearchPage /></MainLayout>} />
+        <Route path="/career-agent" element={<MainLayout><CareerAgentPage /></MainLayout>} />
+        <Route path="/career-mentor" element={<MainLayout><CareerMentorPage /></MainLayout>} />
       </Route>
       
       {/* 404 */}

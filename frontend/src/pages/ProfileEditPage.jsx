@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import userService from '../services/userService';
 import toast from 'react-hot-toast';
-import { User, Mail, Building, GraduationCap, Github, Linkedin, Info, Tag, UserCog, Sparkles, ArrowLeft, Calendar, Upload, Image } from 'lucide-react';
+import { User, Mail, Building, GraduationCap, Github, Linkedin, Info, Tag, UserCog, Sparkles, ArrowLeft, Calendar, Upload, Image, Heart, Target } from 'lucide-react';
 
 const ProfileEditPage = () => {
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ const ProfileEditPage = () => {
     graduationYear: '',
     bio: '',
     skills: '',
+    interests: '',
+    careerGoals: '',
     github: '',
     linkedin: '',
     profilePicture: ''
@@ -33,6 +35,8 @@ const ProfileEditPage = () => {
         graduationYear: user.graduationYear || '',
         bio: user.bio || '',
         skills: user.skills || '',
+        interests: user.interests || '',
+        careerGoals: user.careerGoals || '',
         github: user.github || '',
         linkedin: user.linkedin || '',
         profilePicture: user.profilePicture || ''
@@ -352,6 +356,48 @@ const ProfileEditPage = () => {
                 onChange={handleChange}
                 className="input pl-10"
                 placeholder="React, Java, Spring Boot, Python"
+              />
+            </div>
+          </div>
+
+          {/* Interests */}
+          <div>
+            <label htmlFor="interests" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Career Interests (comma separated)
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Heart className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="interests"
+                name="interests"
+                type="text"
+                value={formData.interests}
+                onChange={handleChange}
+                className="input pl-10"
+                placeholder="Web Development, Artificial Intelligence, Cybersecurity"
+              />
+            </div>
+          </div>
+
+          {/* Career Goals */}
+          <div>
+            <label htmlFor="careerGoals" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Career Goals
+            </label>
+            <div className="relative">
+              <div className="absolute top-3 left-3 pointer-events-none">
+                <Target className="h-5 w-5 text-gray-400" />
+              </div>
+              <textarea
+                id="careerGoals"
+                name="careerGoals"
+                value={formData.careerGoals}
+                onChange={handleChange}
+                rows={3}
+                className="input pl-10 resize-none"
+                placeholder="Describe your long-term career aspirations (e.g., Become a Tech Lead, transition into Product Management, etc.)"
               />
             </div>
           </div>

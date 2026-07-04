@@ -22,6 +22,12 @@ public class ProfileUpdateRequest {
     @Size(max = 500, message = "Skills must be less than 500 characters")
     private String skills;
     
+    @Size(max = 1000, message = "Interests must be less than 1000 characters")
+    private String interests;
+    
+    @Size(max = 1000, message = "Career goals must be less than 1000 characters")
+    private String careerGoals;
+    
     private String github;
     private String linkedin;
     private String profilePicture;

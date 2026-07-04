@@ -42,6 +42,14 @@ export const BlogProvider = ({ children }) => {
     }
   };
 
+  const incrementView = async (id) => {
+    try {
+      await blogService.incrementView(id);
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+    }
+  };
+
   const createBlog = async (data) => {
     try {
       // Get token from localStorage
@@ -141,6 +149,7 @@ export const BlogProvider = ({ children }) => {
     totalElements,
     fetchBlogs,
     fetchBlog,
+    incrementView,
     createBlog,
     updateBlog,
     deleteBlog,

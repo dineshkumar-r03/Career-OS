@@ -43,11 +43,6 @@ public class BlogService {
         Blog blog = blogRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Blog not found"));
         
-        if (blog.getStatus() == Blog.Status.PUBLISHED) {
-            blog.incrementViewCount();
-            blogRepository.save(blog);
-        }
-        
         BlogResponse response = BlogResponse.fromBlog(blog);
         
         // Check if user has liked/bookmarked the blog
@@ -56,6 +51,17 @@ public class BlogService {
         }
         
         return response;
+    }
+    
+    @Transactional
+    public void incrementViewCount(Long id) {
+        Blog blog = blogRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Blog not found"));
+        
+        if (blog.getStatus() == Blog.Status.PUBLISHED) {
+            blog.incrementViewCount();
+            blogRepository.save(blog);
+        }
     }
     
     public Page<BlogResponse> getAllBlogs(int page, int size, String sortBy, String direction, String category, Long authorId, Long currentUserId) {

@@ -17,6 +17,7 @@ public class MessageResponse {
     private String content;
     private LocalDateTime createdAt;
     private boolean isRead;
+    private boolean isLiked;
 
     public static MessageResponse fromMessage(Message message) {
         MessageResponse response = new MessageResponse();
@@ -30,6 +31,7 @@ public class MessageResponse {
         response.setContent(message.getContent());
         response.setCreatedAt(message.getCreatedAt());
         response.setRead(message.isRead());
+        response.setLiked(message.isLiked());
         return response;
     }
 }

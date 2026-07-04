@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBlog } from '../hooks/useBlog';
 import { useAuth } from '../hooks/useAuth';
@@ -26,7 +26,8 @@ const BlogPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { fetchBlog, deleteBlog } = useBlog();
+  const { fetchBlog, incrementView, deleteBlog } = useBlog();
+  const lastViewedId = useRef(null);
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
@@ -38,6 +39,10 @@ const BlogPage = () => {
 
   useEffect(() => {
     loadBlog();
+    if (lastViewedId.current !== id) {
+      incrementView(id);
+      lastViewedId.current = id;
+    }
   }, [id]);
 
   useEffect(() => {

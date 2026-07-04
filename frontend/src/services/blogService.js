@@ -3,6 +3,7 @@ import api from './api';
 const blogService = {
   getAllBlogs: (params) => api.get('/blogs', { params }),
   getBlog: (id) => api.get(`/blogs/${id}`),
+  incrementView: (id) => api.post(`/blogs/${id}/view`),
   createBlog: (data) => {
     console.log('Creating blog with data:', data);
     return api.post('/blogs', data);

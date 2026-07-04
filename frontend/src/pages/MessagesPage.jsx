@@ -3,8 +3,23 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import messageService from '../services/messageService';
 import userService from '../services/userService';
-import { Send, Search, MessageSquare, ArrowLeft, GraduationCap, Clock, Sparkles } from 'lucide-react';
+import { Send, Search, MessageSquare, ArrowLeft, GraduationCap, Clock, Sparkles, Heart, Smile } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const EMOJI_CATEGORIES = [
+  {
+    name: 'Smileys',
+    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣']
+  },
+  {
+    name: 'Gestures',
+    emojis: ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝']
+  },
+  {
+    name: 'Hearts & Fun',
+    emojis: ['❤️', '💔', '💖', '💗', '💓', '💞', '💕', '💟', '❣️', '🔥', '✨', '🎉', '🌟', '💥', '💯', '🚀', '💡', '💬', '👀', '👏', '🙌', '🎉']
+  }
+];
 
 const MessagesPage = () => {
   const { user: currentUser } = useAuth();
@@ -19,9 +34,25 @@ const MessagesPage = () => {
   const [loadingConv, setLoadingConv] = useState(true);
   const [loadingChat, setLoadingChat] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   const chatEndRef = useRef(null);
   const pollIntervalRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Handle click outside emoji picker to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Extract ?user=XX from URL query params
   const queryParams = new URLSearchParams(location.search);
@@ -158,10 +189,17 @@ const MessagesPage = () => {
         const chatResponse = await messageService.getChatHistory(activeUsr.id);
         const newMsgs = chatResponse.data || [];
         
-        // Only update state if length or content changes to prevent scroll jumps
-        if (newMsgs.length !== msgs.length) {
+        // Update state if message list length or any message property (e.g. like, read) changes
+        const hasChanges = newMsgs.length !== msgs.length || newMsgs.some((msg, idx) => {
+          const oldMsg = msgs[idx];
+          return !oldMsg || oldMsg.id !== msg.id || oldMsg.isLiked !== msg.isLiked || oldMsg.isRead !== msg.isRead;
+        });
+
+        if (hasChanges) {
           setMessages(newMsgs);
-          setTimeout(scrollToBottom, 50);
+          if (newMsgs.length !== msgs.length) {
+            setTimeout(scrollToBottom, 50);
+          }
         }
       }
 
@@ -215,6 +253,38 @@ const MessagesPage = () => {
       setNewMessage(contentToSend); // Restore typed message
       setSending(false);
     }
+  };
+
+  const handleToggleLike = async (messageId) => {
+    try {
+      const response = await messageService.toggleLikeMessage(messageId);
+      const updatedMessage = response.data;
+      setMessages(prev => prev.map(m => m.id === messageId ? updatedMessage : m));
+    } catch (error) {
+      console.error('Error toggling like status:', error);
+      toast.error('Failed to update message like');
+    }
+  };
+
+  const handleEmojiClick = (emoji) => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const text = input.value;
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+
+    const updatedValue = before + emoji + after;
+    setNewMessage(updatedValue);
+
+    // Put focus back to input and set cursor position after the emoji
+    setTimeout(() => {
+      input.focus();
+      const newCursorPos = start + emoji.length;
+      input.setSelectionRange(newCursorPos, newCursorPos);
+    }, 10);
   };
 
   const scrollToBottom = () => {
@@ -379,8 +449,22 @@ const MessagesPage = () => {
                     return (
                       <div
                         key={msg.id}
-                        className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-scale-in`}
+                        className={`flex ${isOwn ? 'justify-end' : 'justify-start'} items-center gap-2 group animate-scale-in relative py-1`}
                       >
+                        {/* Outgoing Message: Like button on the left of bubble */}
+                        {isOwn && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLike(msg.id)}
+                            className={`opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 order-first cursor-pointer ${
+                              msg.isLiked ? 'opacity-100 text-rose-500' : ''
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 transition-transform active:scale-125 ${msg.isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                          </button>
+                        )}
+
+                        {/* Message Bubble */}
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm text-sm relative ${
                             isOwn
@@ -392,7 +476,27 @@ const MessagesPage = () => {
                           <span className={`block text-[9px] text-right mt-1 opacity-70`}>
                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
+
+                          {/* Heart Icon Badge floating at bottom of bubble */}
+                          {msg.isLiked && (
+                            <div className={`absolute -bottom-1.5 ${isOwn ? 'left-3' : 'right-3'} bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 shadow-md rounded-full p-0.5 flex items-center justify-center animate-scale-in z-10`}>
+                              <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                            </div>
+                          )}
                         </div>
+
+                        {/* Incoming Message: Like button on the right of bubble */}
+                        {!isOwn && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleLike(msg.id)}
+                            className={`opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 cursor-pointer ${
+                              msg.isLiked ? 'opacity-100 text-rose-500' : ''
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 transition-transform active:scale-125 ${msg.isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                          </button>
+                        )}
                       </div>
                     );
                   })
@@ -409,15 +513,28 @@ const MessagesPage = () => {
               </div>
               
               {/* Input Footer */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-[var(--clr-border)] bg-white/20 dark:bg-slate-900/10 flex items-center gap-3">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a private message..."
-                  className="input flex-1 py-2.5 rounded-xl text-sm"
-                  disabled={sending}
-                />
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-[var(--clr-border)] bg-white/20 dark:bg-slate-900/10 flex items-center gap-3 relative">
+                <div className="relative flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a private message..."
+                    className="input pr-12 py-2.5 rounded-xl text-sm w-full"
+                    disabled={sending}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/80 cursor-pointer ${
+                      showEmojiPicker ? 'text-indigo-500' : 'text-slate-400 hover:text-indigo-500'
+                    }`}
+                    disabled={sending}
+                  >
+                    <Smile className="w-5 h-5" />
+                  </button>
+                </div>
                 <button
                   type="submit"
                   disabled={sending || !newMessage.trim()}
@@ -425,6 +542,36 @@ const MessagesPage = () => {
                 >
                   <Send className="w-4 h-4 text-white" />
                 </button>
+
+                {/* Emoji Picker Popover */}
+                {showEmojiPicker && (
+                  <div
+                    ref={emojiPickerRef}
+                    className="absolute bottom-20 right-4 z-50 glass-card p-3 shadow-xl border border-[var(--clr-border)] w-72 rounded-2xl animate-scale-in"
+                  >
+                    <div className="h-56 overflow-y-auto space-y-3 pr-1">
+                      {EMOJI_CATEGORIES.map((cat) => (
+                        <div key={cat.name} className="space-y-1.5">
+                          <h5 className="text-[10px] uppercase tracking-wider font-extrabold text-[var(--clr-text-muted)] sticky top-0 bg-white/90 dark:bg-slate-900/90 py-0.5 backdrop-blur-xs">
+                            {cat.name}
+                          </h5>
+                          <div className="grid grid-cols-8 gap-1">
+                            {cat.emojis.map((emoji) => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => handleEmojiClick(emoji)}
+                                className="text-lg p-1 hover:bg-indigo-500/10 dark:hover:bg-indigo-500/20 rounded-md transition-colors text-center cursor-pointer select-none"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </form>
             </>
           ) : (

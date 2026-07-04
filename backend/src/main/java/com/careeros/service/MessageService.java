@@ -121,4 +121,20 @@ public class MessageService {
 
         return conversations;
     }
+
+    @Transactional
+    public MessageResponse toggleLikeMessage(Long messageId, User currentUser) {
+        Message message = messageRepository.findById(messageId)
+            .orElseThrow(() -> new RuntimeException("Message not found"));
+
+        // Only sender or recipient of the message can like it
+        if (!message.getSender().getId().equals(currentUser.getId()) &&
+            !message.getRecipient().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized to like this message");
+        }
+
+        message.setLiked(!message.isLiked());
+        messageRepository.save(message);
+        return MessageResponse.fromMessage(message);
+    }
 }

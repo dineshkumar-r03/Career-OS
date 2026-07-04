@@ -37,4 +37,7 @@ public class Message {
     private LocalDateTime createdAt;
 
     private boolean isRead = false;
+
+    private boolean isLiked = false;
 }
+

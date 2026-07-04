@@ -37,7 +37,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractEmail(jwt);
+        try {
+            userEmail = jwtService.extractEmail(jwt);
+        } catch (Exception e) {
+            // Token is expired or invalid - let filter chain continue without setting authentication
+            filterChain.doFilter(request, response);
+            return;
+        }
         
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);

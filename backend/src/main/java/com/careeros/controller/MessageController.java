@@ -42,4 +42,12 @@ public class MessageController {
         User currentUser = (User) authentication.getPrincipal();
         return ResponseEntity.ok(messageService.getChatHistory(recipientId, currentUser));
     }
+
+    @PostMapping("/{messageId}/like")
+    public ResponseEntity<MessageResponse> toggleLikeMessage(
+            @PathVariable Long messageId,
+            Authentication authentication) {
+        User currentUser = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(messageService.toggleLikeMessage(messageId, currentUser));
+    }
 }

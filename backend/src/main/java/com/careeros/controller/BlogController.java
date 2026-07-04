@@ -40,6 +40,12 @@ public class BlogController {
         return ResponseEntity.ok(blogService.getBlogById(id, userId));
     }
     
+    @PostMapping("/{id}/view")
+    public ResponseEntity<com.careeros.dto.response.ApiResponse> incrementViewCount(@PathVariable Long id) {
+        blogService.incrementViewCount(id);
+        return ResponseEntity.ok(new com.careeros.dto.response.ApiResponse(true, "View count incremented"));
+    }
+    
     @PostMapping
     public ResponseEntity<BlogResponse> createBlog(@Valid @RequestBody BlogRequest request, Authentication authentication) {
         User user = (User) authentication.getPrincipal();

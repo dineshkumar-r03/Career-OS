@@ -38,10 +38,10 @@ public class GeminiService {
         }
 
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=" + apiKey;
 
             String prompt = String.format(
-                    "You are an expert AI Career Guidance Counselor. Make the suggestions detailed, custom, and highly relevant.\n" +
+                    "You are an expert AI Career Guidance Counselor. Make the suggestions detailed, custom, and highly relevant. All descriptions, reasons, and explanations must be returned as a list of 2-3 key points (each starting with a hyphen '-').\n" +
                             "Analyze the following student profile:\n" +
                             "- Name: %s\n" +
                             "- Education: Department of %s at %s (Graduation: %s)\n" +
@@ -53,7 +53,7 @@ public class GeminiService {
                             "  \"careerPaths\": [\n" +
                             "    {\n" +
                             "      \"title\": \"Career Path Title\",\n" +
-                            "      \"description\": \"Detailed description of why this path matches the user.\",\n" +
+                            "      \"description\": \"- Keypoint 1\\n- Keypoint 2\\n- Keypoint 3\",\n" +
                             "      \"matchRelevance\": 90,\n" +
                             "      \"outlook\": \"Growing / High Demand / Stable\",\n" +
                             "      \"entryRoles\": [\"Role A\", \"Role B\"],\n" +
@@ -69,7 +69,7 @@ public class GeminiService {
                             "    {\n" +
                             "      \"skillName\": \"Skill Name\",\n" +
                             "      \"status\": \"Ready / Intermediate / Need to learn\",\n" +
-                            "      \"reason\": \"Brief explanation of this skill status and how it helps the user.\"\n" +
+                            "      \"reason\": \"- Keypoint 1\\n- Keypoint 2\\n- Keypoint 3\"\n" +
                             "    }\n" +
                             "  ],\n" +
                             "  \"roadmap\": [\n" +
@@ -83,7 +83,7 @@ public class GeminiService {
                             "  \"projects\": [\n" +
                             "    {\n" +
                             "      \"title\": \"Project Title\",\n" +
-                            "      \"description\": \"A premium project description that will help them build their portfolio.\",\n" +
+                            "      \"description\": \"- Keypoint 1\\n- Keypoint 2\\n- Keypoint 3\",\n" +
                             "      \"difficulty\": \"Easy / Medium / Hard\",\n" +
                             "      \"skillsAddressed\": [\"Skill A\", \"Skill B\"]\n" +
                             "    }\n" +
@@ -92,7 +92,7 @@ public class GeminiService {
                             "    {\n" +
                             "      \"name\": \"Certification Name\",\n" +
                             "      \"provider\": \"Provider Name (e.g. AWS, Oracle, Google)\",\n" +
-                            "      \"description\": \"Why this certification is helpful.\",\n" +
+                            "      \"description\": \"- Keypoint 1\\n- Keypoint 2\\n- Keypoint 3\",\n" +
                             "      \"relevance\": \"High / Medium\"\n" +
                             "    }\n" +
                             "  ],\n" +
@@ -154,6 +154,21 @@ public class GeminiService {
         if (configuredApiKey != null && !configuredApiKey.trim().isEmpty()) {
             return configuredApiKey;
         }
+        try {
+            Properties props = new Properties();
+            try (var is = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+                if (is != null) {
+                    props.load(is);
+                    String key = props.getProperty("gemini.api.key");
+                    if (key != null && !key.trim().isEmpty()) {
+                        log.info("Successfully loaded gemini.api.key manually from application.properties");
+                        return key.trim();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to load application.properties manually", e);
+        }
         return System.getenv("GEMINI_API_KEY");
     }
 
@@ -191,7 +206,7 @@ public class GeminiService {
                 "  \"careerPaths\": [\n" +
                 "    {\n" +
                 "      \"title\": \"Full-Stack Software Engineer\",\n" +
-                "      \"description\": \"Leverage your frontend and backend skills to build responsive, complete web applications. You'll work on both user interfaces and database logic.\",\n" +
+                "      \"description\": \"- Leverage your frontend and backend skills to build responsive, complete web applications.\\n- Work on both user interfaces and database logic.\\n- Gain hands-on exposure to full application lifecycles.\",\n" +
                 "      \"matchRelevance\": 95,\n" +
                 "      \"outlook\": \"Growing / High Demand\",\n" +
                 "      \"entryRoles\": [\"Associate Software Engineer\", \"Junior Web Developer\"],\n" +
@@ -203,7 +218,7 @@ public class GeminiService {
                 "    },\n" +
                 "    {\n" +
                 "      \"title\": \"Frontend Engineer (React Specialist)\",\n" +
-                "      \"description\": \"Focus on creating pixel-perfect, highly responsive, and user-centric client interfaces. Deeply utilize React, Tailwind CSS, and frontend build tools.\",\n" +
+                "      \"description\": \"- Focus on creating pixel-perfect, highly responsive, and user-centric client interfaces.\\n- Deeply utilize React, Tailwind CSS, and modern frontend build tools.\\n- Implement responsive state management patterns.\",\n" +
                 "      \"matchRelevance\": 85,\n" +
                 "      \"outlook\": \"High Demand\",\n" +
                 "      \"entryRoles\": [\"Frontend UI Developer\", \"React Developer\"],\n" +
@@ -214,7 +229,7 @@ public class GeminiService {
                 "    },\n" +
                 "    {\n" +
                 "      \"title\": \"Cloud Web Solutions Architect\",\n" +
-                "      \"description\": \"Design high-availability cloud applications, managing deployment pipelines, containerization (Docker/Kubernetes), and serverless backend solutions.\",\n" +
+                "      \"description\": \"- Design high-availability cloud applications.\\n- Manage deployment pipelines and containerization using Docker and Kubernetes.\\n- Implement serverless backend solutions on cloud providers.\",\n" +
                 "      \"matchRelevance\": 78,\n" +
                 "      \"outlook\": \"High Demand\",\n" +
                 "      \"entryRoles\": [\"Cloud Engineer Graduate\", \"DevOps Engineer Intern\"],\n" +
@@ -228,17 +243,17 @@ public class GeminiService {
                 "    {\n" +
                 "      \"skillName\": \"React & JavaScript\",\n" +
                 "      \"status\": \"Ready\",\n" +
-                "      \"reason\": \"You have a strong base in building interactive component-driven layouts. Keep mastering custom hooks and state management (Redux/Zustand).\"\n" +
+                "      \"reason\": \"- Strong base in building interactive component-driven layouts.\\n- Ready to master custom hooks and state management (Redux/Zustand).\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"skillName\": \"Backend & Spring Boot\",\n" +
                 "      \"status\": \"Intermediate\",\n" +
-                "      \"reason\": \"You understand controllers and REST endpoints, but should dive deeper into JPA relationships, transactions, and Spring Security.\"\n" +
+                "      \"reason\": \"- Good understanding of controllers and REST endpoints.\\n- Should dive deeper into JPA relationships, transactions, and Spring Security.\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"skillName\": \"Docker & DevOps CI/CD\",\n" +
                 "      \"status\": \"Need to learn\",\n" +
-                "      \"reason\": \"Modern full stack roles expect you to package your applications and deploy them to cloud providers (AWS/GCP) using Github Actions.\"\n" +
+                "      \"reason\": \"- Modern full stack roles expect you to package applications.\\n- Learn to deploy them to cloud providers (AWS/GCP) using Github Actions.\"\n" +
                 "    }\n" +
                 "  ],\n" +
                 "  \"roadmap\": [\n" +
@@ -270,13 +285,13 @@ public class GeminiService {
                 "  \"projects\": [\n" +
                 "    {\n" +
                 "      \"title\": \"Collaborative Real-time Board (Trello-like)\",\n" +
-                "      \"description\": \"Build a project management board supporting real-time drag-and-drop workspace updates using Websockets, JWT authentication, and Spring JPA PostgreSQL audits.\",\n" +
+                "      \"description\": \"- Build a project management board supporting real-time drag-and-drop workspace updates.\\n- Implement WebSockets, JWT authentication, and Spring JPA PostgreSQL audits.\",\n" +
                 "      \"difficulty\": \"Hard\",\n" +
                 "      \"skillsAddressed\": [\"React\", \"Spring Boot Websockets\", \"PostgreSQL\", \"Tailwind CSS\"]\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"title\": \"Mock Payment Gateway Integration Suite\",\n" +
-                "      \"description\": \"Create a sandbox platform that allows developers to simulate payment operations, record webhook events, and visualize request logs with charts.\",\n" +
+                "      \"description\": \"- Create a sandbox platform that allows developers to simulate payment operations.\\n- Record webhook events, and visualize request logs with interactive charts.\",\n" +
                 "      \"difficulty\": \"Medium\",\n" +
                 "      \"skillsAddressed\": [\"Java\", \"Chart.js\", \"Spring Security\", \"Bootstrap\"]\n" +
                 "    }\n" +
@@ -285,13 +300,13 @@ public class GeminiService {
                 "    {\n" +
                 "      \"name\": \"AWS Certified Developer - Associate\",\n" +
                 "      \"provider\": \"Amazon Web Services\",\n" +
-                "      \"description\": \"Validates proficiency in developing, deploying, and debugging cloud-based applications on AWS.\",\n" +
+                "      \"description\": \"- Validates proficiency in developing, deploying, and debugging cloud-based applications.\\n- Highly valued for modern full-stack deployment setups.\",\n" +
                 "      \"relevance\": \"High\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"name\": \"Oracle Certified Professional: Java SE Developer\",\n" +
                 "      \"provider\": \"Oracle\",\n" +
-                "      \"description\": \"Demonstrates deep backend proficiency in Java core logic and object-oriented architectures.\",\n" +
+                "      \"description\": \"- Demonstrates deep backend proficiency in Java core logic.\\n- Confirms solid knowledge of object-oriented architectures.\",\n" +
                 "      \"relevance\": \"Medium\"\n" +
                 "    }\n" +
                 "  ],\n" +
@@ -304,7 +319,7 @@ public class GeminiService {
                 "  \"careerPaths\": [\n" +
                 "    {\n" +
                 "      \"title\": \"Backend Engineer (Java Enterprise)\",\n" +
-                "      \"description\": \"Design and build microservices architectures, transactional APIs, and robust data integration channels inside high-scale corporate environments.\",\n" +
+                "      \"description\": \"- Design and build microservices architectures and transactional APIs.\\n- Build robust data integration channels inside high-scale corporate environments.\",\n" +
                 "      \"matchRelevance\": 98,\n" +
                 "      \"outlook\": \"Stable / High Demand\",\n" +
                 "      \"entryRoles\": [\"Junior Backend Developer\", \"Java Systems Analyst\"],\n" +
@@ -316,7 +331,7 @@ public class GeminiService {
                 "    },\n" +
                 "    {\n" +
                 "      \"title\": \"Database & Reliability Engineer\",\n" +
-                "      \"description\": \"Optimize SQL execution plans, database structures, data replication pipelines, and database caching patterns.\",\n" +
+                "      \"description\": \"- Optimize SQL execution plans and database structures.\\n- Manage data replication pipelines and database caching patterns.\",\n" +
                 "      \"matchRelevance\": 80,\n" +
                 "      \"outlook\": \"Growing\",\n" +
                 "      \"entryRoles\": [\"Associate Database Engineer\", \"DBA Assistant\"],\n" +
@@ -330,17 +345,17 @@ public class GeminiService {
                 "    {\n" +
                 "      \"skillName\": \"Java Core & OOP\",\n" +
                 "      \"status\": \"Ready\",\n" +
-                "      \"reason\": \"Solid understanding of Java collections, threads, and syntax. Make sure you also master Java 17 features like records and pattern matching.\"\n" +
+                "      \"reason\": \"- Solid understanding of Java collections, threads, and syntax.\\n- Make sure you also master Java 17 features like records and pattern matching.\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"skillName\": \"Spring JPA & Hibernate\",\n" +
                 "      \"status\": \"Intermediate\",\n" +
-                "      \"reason\": \"You can do CRUD operations. Need to learn database optimization, N+1 query problem avoidance, and custom native queries.\"\n" +
+                "      \"reason\": \"- Can perform basic CRUD operations.\\n- Need to learn database optimization, N+1 query problem avoidance, and custom native queries.\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"skillName\": \"Microservices & Spring Cloud\",\n" +
                 "      \"status\": \"Need to learn\",\n" +
-                "      \"reason\": \"Enterprise systems are distributed. Learn Eureka Discovery, Gateway, and Circuit Breakers (Resilience4j).\"\n" +
+                "      \"reason\": \"- Distributed enterprise system environments demand this.\\n- Learn Eureka Discovery, Gateway, and Circuit Breakers (Resilience4j).\"\n" +
                 "    }\n" +
                 "  ],\n" +
                 "  \"roadmap\": [\n" +
@@ -360,7 +375,7 @@ public class GeminiService {
                 "  \"projects\": [\n" +
                 "    {\n" +
                 "      \"title\": \"Distributed E-Commerce Backend Suite\",\n" +
-                "      \"description\": \"Write a set of microservices (Order, Inventory, Product) communicating via FeignClient and Kafka, managing transactions with Resilience4j.\",\n" +
+                "      \"description\": \"- Write a set of microservices (Order, Inventory, Product) communicating via FeignClient and Kafka.\\n- Manage distributed transactions and circuit breakers with Resilience4j.\",\n" +
                 "      \"difficulty\": \"Hard\",\n" +
                 "      \"skillsAddressed\": [\"Spring Boot\", \"Spring Cloud\", \"Kafka\", \"PostgreSQL\", \"Redis\"]\n" +
                 "    }\n" +
@@ -369,7 +384,7 @@ public class GeminiService {
                 "    {\n" +
                 "      \"name\": \"Spring Certified Professional\",\n" +
                 "      \"provider\": \"VMware\",\n" +
-                "      \"description\": \"Validates understanding of core Spring concepts, IoC container, Spring Boot, JPA, and transactions.\",\n" +
+                "      \"description\": \"- Validates understanding of core Spring concepts, IoC container, Spring Boot, JPA, and transactions.\\n- Essential credential for corporate enterprise backend roles.\",\n" +
                 "      \"relevance\": \"High\"\n" +
                 "    }\n" +
                 "  ],\n" +
@@ -382,7 +397,7 @@ public class GeminiService {
                 "  \"careerPaths\": [\n" +
                 "    {\n" +
                 "      \"title\": \"AI / Machine Learning Engineer\",\n" +
-                "      \"description\": \"Design ML models, build inference pipelines, integrate Large Language Models (LLMs), and scale machine learning workloads in production.\",\n" +
+                "      \"description\": \"- Design ML models and build inference pipelines.\\n- Integrate Large Language Models (LLMs) and scale machine learning workloads in production.\",\n" +
                 "      \"matchRelevance\": 96,\n" +
                 "      \"outlook\": \"Growing / High Demand\",\n" +
                 "      \"entryRoles\": [\"Junior ML Engineer\", \"AI Research Intern\"],\n" +
@@ -393,7 +408,7 @@ public class GeminiService {
                 "    },\n" +
                 "    {\n" +
                 "      \"title\": \"Data Scientist / Analyst\",\n" +
-                "      \"description\": \"Perform exploratory analysis, build statistical models, write data processing scripts, and build interactive analytics dashboards.\",\n" +
+                "      \"description\": \"- Perform exploratory analysis and build statistical models.\\n- Write data processing scripts and build interactive analytics dashboards.\",\n" +
                 "      \"matchRelevance\": 85,\n" +
                 "      \"outlook\": \"High Demand\",\n" +
                 "      \"entryRoles\": [\"Junior Data Analyst\", \"Associate Data Scientist\"],\n" +
@@ -407,17 +422,17 @@ public class GeminiService {
                 "    {\n" +
                 "      \"skillName\": \"Python Core & NumPy\",\n" +
                 "      \"status\": \"Ready\",\n" +
-                "      \"reason\": \"Great script drafting skills. Make sure you transition to Pandas dataframes and structured object-oriented code in Python.\"\n" +
+                "      \"reason\": \"- Great script drafting skills.\\n- Make sure you transition to Pandas dataframes and structured object-oriented code in Python.\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"skillName\": \"TensorFlow or PyTorch\",\n" +
                 "      \"status\": \"Intermediate\",\n" +
-                "      \"reason\": \"You can construct simple feedforward networks. Need to learn CNNs, RNNs, and custom training loops.\"\n" +
+                "      \"reason\": \"- Can construct simple feedforward networks.\\n- Need to learn CNNs, RNNs, and custom training loops in deep learning models.\"\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"skillName\": \"MLOps & Model Deployment\",\n" +
                 "      \"status\": \"Need to learn\",\n" +
-                "      \"reason\": \"Models must be deployed. Learn FastAPI wrappers, Docker containerizing model pipelines, and cloud endpoints (AWS SageMaker).\"\n" +
+                "      \"reason\": \"- Models must be deployed to be useful.\\n- Learn FastAPI wrappers, Docker containerizing model pipelines, and cloud endpoints (AWS SageMaker).\"\n" +
                 "    }\n" +
                 "  ],\n" +
                 "  \"roadmap\": [\n" +
@@ -437,7 +452,7 @@ public class GeminiService {
                 "  \"projects\": [\n" +
                 "    {\n" +
                 "      \"title\": \"Multimodal Search Engine for Images & Text\",\n" +
-                "      \"description\": \"Create a search database that matches text queries to image directories using CLIP embeddings, a Vector Database (Qdrant or Pinecone), and a FastAPI backend.\",\n" +
+                "      \"description\": \"- Create a search database that matches text queries to image directories using CLIP embeddings.\\n- Use a Vector Database (Qdrant or Pinecone) and set up a FastAPI backend wrapper.\",\n" +
                 "      \"difficulty\": \"Hard\",\n" +
                 "      \"skillsAddressed\": [\"PyTorch\", \"FastAPI\", \"Qdrant Vector DB\", \"Docker\"]\n" +
                 "    }\n" +
@@ -446,7 +461,7 @@ public class GeminiService {
                 "    {\n" +
                 "      \"name\": \"Google Cloud Professional Machine Learning Engineer\",\n" +
                 "      \"provider\": \"Google Cloud\",\n" +
-                "      \"description\": \"Validates design, construction, and deployment of ML pipelines on GCP.\",\n" +
+                "      \"description\": \"- Validates design, construction, and deployment of ML pipelines.\\n- Highly recognized certification for enterprise MLOps roles.\",\n" +
                 "      \"relevance\": \"High\"\n" +
                 "    }\n" +
                 "  ],\n" +

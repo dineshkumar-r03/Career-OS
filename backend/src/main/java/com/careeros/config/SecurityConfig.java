@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/blogs/*/view").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/blogs/**").permitAll()
+                .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

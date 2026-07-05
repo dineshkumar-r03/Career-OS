@@ -110,6 +110,43 @@ const CareerAgentPage = () => {
     }
   };
 
+  // Render keypoints / bullet points nicely
+  const renderKeypoints = (text) => {
+    if (!text) return null;
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const hasBullets = lines.some(line => line.startsWith('-') || line.startsWith('*'));
+    
+    if (hasBullets) {
+      return (
+        <ul className="list-disc pl-5 space-y-1 mt-1 text-slate-600 dark:text-slate-350">
+          {lines.map((line, idx) => {
+            const cleanLine = line.replace(/^[-*\s]+/, '');
+            return (
+              <li key={idx} className="text-sm leading-relaxed">
+                {cleanLine}
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    const sentences = text.split(/(?<=\.)\s+/).map(s => s.trim()).filter(s => s.length > 0);
+    if (sentences.length > 1) {
+      return (
+        <ul className="list-disc pl-5 space-y-1 mt-1 text-slate-600 dark:text-slate-350">
+          {sentences.map((sentence, idx) => (
+            <li key={idx} className="text-sm leading-relaxed">
+              {sentence}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    return <span className="text-sm leading-relaxed">{text}</span>;
+  };
+
   // Status mapping colors for Skills analysis
   const getStatusBadgeClass = (status) => {
     switch (status.toLowerCase()) {
@@ -375,9 +412,9 @@ const CareerAgentPage = () => {
                       </div>
                     </div>
                     
-                    <p className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed mb-4">
-                      {path.description}
-                    </p>
+                    <div className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed mb-4">
+                      {renderKeypoints(path.description)}
+                    </div>
 
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
@@ -433,7 +470,9 @@ const CareerAgentPage = () => {
                         </div>
                         <div>
                           <h4 className="font-bold text-slate-800 dark:text-white">{skill.skillName}</h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{skill.reason}</p>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            {renderKeypoints(skill.reason)}
+                          </div>
                         </div>
                       </div>
                       <span className={`px-3 py-1.5 rounded-full text-xs font-bold w-fit flex-shrink-0 ${getStatusBadgeClass(skill.status)}`}>
@@ -518,9 +557,9 @@ const CareerAgentPage = () => {
                       </span>
                     </div>
 
-                    <p className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed mb-4">
-                      {project.description}
-                    </p>
+                    <div className="text-sm text-slate-600 dark:text-slate-350 leading-relaxed mb-4">
+                      {renderKeypoints(project.description)}
+                    </div>
 
                     <div>
                       <h5 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Core Skills Developed</h5>
@@ -553,7 +592,9 @@ const CareerAgentPage = () => {
                         <div>
                           <h4 className="font-bold text-slate-800 dark:text-white">{cert.name}</h4>
                           <p className="text-xs text-slate-400 font-semibold">{cert.provider}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{cert.description}</p>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                            {renderKeypoints(cert.description)}
+                          </div>
                         </div>
                       </div>
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider ${

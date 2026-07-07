@@ -14,7 +14,7 @@ Yes, you can absolutely host both the frontend and the backend on the same site 
 ## 🛠️ Step-by-Step Implementation
 
 ### Step 1: Tell React to Call Relative URLs
-Because the React app will be served directly by Spring Boot, it no longer needs to specify `http://localhost:8090` or `https://careeros-backend.onrender.com` to make API calls. It can use **relative paths** (e.g., `/api/auth/login`).
+Because the React app will be served directly by Spring Boot, it no longer needs to specify `http://localhost:8090` or `https://connect-backend.onrender.com` to make API calls. It can use **relative paths** (e.g., `/api/auth/login`).
 
 1. Open [api.js](file:///c:/Users/Dinesh%20K/OneDrive/Desktop/CareerOS/frontend/src/services/api.js).
 2. Change the Axios baseURL configuration to point to a relative path:
@@ -135,4 +135,4 @@ public class ViewController {
 Now, you only need to deploy **one single project (the backend)**!
 1. When you run `mvn clean package` on the backend, it will download Node, install frontend dependencies, build the frontend React application, and package it directly inside the generated `.jar` file!
 2. Deploy this single `.jar` file to **Render.com** (as a Web Service) or any cloud hosting provider.
-3. The site URL provided by the cloud platform (e.g. `https://careeros.onrender.com`) will serve both your user interface and the backend REST endpoints seamlessly.
+3. The site URL provided by the cloud platform (e.g. `https://connect.onrender.com`) will serve both your user interface and the backend REST endpoints seamlessly.

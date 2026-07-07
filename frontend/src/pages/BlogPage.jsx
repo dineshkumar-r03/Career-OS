@@ -123,7 +123,7 @@ const BlogPage = () => {
   const handleShare = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: blog.title, text: blog.subtitle || 'Check out this blog on CareerOS', url: window.location.href });
+        await navigator.share({ title: blog.title, text: blog.subtitle || 'Check out this blog on Connect', url: window.location.href });
       } else {
         navigator.clipboard.writeText(window.location.href);
         toast.success('Link copied to clipboard!');

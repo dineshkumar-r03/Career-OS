@@ -7,7 +7,7 @@ const AuthLayout = ({ children }) => {
       <div className="auth-layout-inner">
         <div className="auth-brand-row">
           <Link to="/" className="auth-brand">
-            CareerOS
+            Connect
           </Link>
         </div>
         {children}

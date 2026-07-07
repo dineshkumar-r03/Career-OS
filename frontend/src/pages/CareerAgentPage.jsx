@@ -615,7 +615,7 @@ const CareerAgentPage = () => {
               <div className="space-y-4 animate-slide-up">
                 <div className="glass-card p-6">
                   <h3 className="text-lg font-black text-slate-850 dark:text-white mb-1">Platform Guidance & Success Stories</h3>
-                  <p className="text-xs text-slate-400">Learn from actual experiences shared by fellow students and professionals on the CareerOS network.</p>
+                  <p className="text-xs text-slate-400">Learn from actual experiences shared by fellow students and professionals on the Connect network.</p>
                 </div>
                 
                 {guidance.relevantStories && guidance.relevantStories.length > 0 ? (

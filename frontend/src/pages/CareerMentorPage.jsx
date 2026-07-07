@@ -378,7 +378,7 @@ const CareerMentorPage = () => {
           <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">CareerOS AI Mentor</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Connect AI Mentor</span>
             </div>
             <div className="flex items-center gap-3">
               {streaming && (

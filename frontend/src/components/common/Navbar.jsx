@@ -182,7 +182,7 @@ const Navbar = () => {
             <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand-sm transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-black gradient-text tracking-tight">CareerOS</span>
+            <span className="text-xl font-black gradient-text tracking-tight">Connect</span>
           </Link>
 
           {/* Desktop Nav Links */}

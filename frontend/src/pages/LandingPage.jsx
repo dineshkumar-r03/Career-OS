@@ -82,7 +82,7 @@ const LandingPage = () => {
               <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand-sm">
                 <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xl font-black gradient-text tracking-tight">CareerOS</span>
+              <span className="text-xl font-black gradient-text tracking-tight">Connect</span>
             </div>
             <div className="flex items-center gap-3">
               {isAuthenticated ? (
@@ -140,7 +140,7 @@ const LandingPage = () => {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10 animate-slide-up delay-100 leading-relaxed">
-            CareerOS is the ultimate career guidance platform where final-year students
+            Connect is the ultimate career guidance platform where final-year students
             and graduates share their journey, experiences, and advice.
           </p>
 
@@ -178,7 +178,7 @@ const LandingPage = () => {
               <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">Why Choose Us</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-black">
-              Why <span className="gradient-text">CareerOS?</span>
+              Why <span className="gradient-text">Connect?</span>
             </h2>
             <p className="text-slate-500 dark:text-slate-400 mt-4 max-w-xl mx-auto">
               Everything you need to navigate your career journey, all in one place.
@@ -276,7 +276,7 @@ const LandingPage = () => {
                 <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center">
                   <Zap className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xl font-black gradient-text">CareerOS</span>
+                <span className="text-xl font-black gradient-text">Connect</span>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed">
                 Learn from seniors. Build your future. The community for ambitious students.
@@ -308,7 +308,7 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p>&copy; {new Date().getFullYear()} CareerOS. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Connect. All rights reserved.</p>
             <p>Made with <span className="text-pink-400">♥</span> for students</p>
           </div>
         </div>

@@ -65,7 +65,7 @@ const Register = () => {
     <section className="auth-panel auth-panel-wide animate-slide-up">
       <div className="auth-header">
         <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join the CareerOS community</p>
+        <p className="auth-subtitle">Join the Connect community</p>
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit}>

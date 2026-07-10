@@ -24,3 +24,6 @@ app.cors.allowed-origins=${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 # Gemini API Key
 gemini.api.key=${GEMINI_API_KEY:}
+
+# Path matching strategy for legacy mapping pattern support
+spring.mvc.pathmatch.matching-strategy=ant_path_matcher

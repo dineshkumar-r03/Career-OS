@@ -10,7 +10,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -90,13 +89,22 @@ public class GeminiLlmService implements LlmService {
                 // Build full payload
                 Map<String, Object> payload = new HashMap<>();
 
-                // Add systemInstruction as a top-level property for native API compliance and stricter adherence
+                // Add system instruction as prefix turns in the contents list (for stable v1 compatibility)
                 if (systemInstruction != null && !systemInstruction.trim().isEmpty()) {
-                    Map<String, Object> sysInstructionMap = new HashMap<>();
                     Map<String, Object> sysPart = new HashMap<>();
-                    sysPart.put("text", systemInstruction);
-                    sysInstructionMap.put("parts", Collections.singletonList(sysPart));
-                    payload.put("systemInstruction", sysInstructionMap);
+                    sysPart.put("text", "System Guideline: " + systemInstruction);
+                    Map<String, Object> sysContent = new HashMap<>();
+                    sysContent.put("role", "user");
+                    sysContent.put("parts", Collections.singletonList(sysPart));
+
+                    Map<String, Object> ackPart = new HashMap<>();
+                    ackPart.put("text", "Understood. I will act as your AI Career Mentor according to those guidelines.");
+                    Map<String, Object> ackContent = new HashMap<>();
+                    ackContent.put("role", "model");
+                    ackContent.put("parts", Collections.singletonList(ackPart));
+
+                    contents.add(0, sysContent);
+                    contents.add(1, ackContent);
                 }
 
                 payload.put("contents", contents);
@@ -127,109 +135,23 @@ public class GeminiLlmService implements LlmService {
                     return;
                 }
 
-                // Read stream character-by-character using a robust JSON string extractor state machine
-                try (Reader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                    final int STATE_SEARCH_KEY = 0;
-                    final int STATE_FIND_COLON = 1;
-                    final int STATE_FIND_QUOTE = 2;
-                    final int STATE_READ_STRING = 3;
-
-                    int state = STATE_SEARCH_KEY;
-                    int keyMatchIdx = 0;
-                    final String keyTarget = "\"text\"";
-                    boolean escaped = false;
-                    int unicodeRemaining = 0;
-                    StringBuilder unicodeHex = new StringBuilder();
-                    StringBuilder chunkBuffer = new StringBuilder();
-
-                    int r;
-                    while ((r = reader.read()) != -1) {
-                        char c = (char) r;
-                        switch (state) {
-                            case STATE_SEARCH_KEY:
-                                if (c == keyTarget.charAt(keyMatchIdx)) {
-                                    keyMatchIdx++;
-                                    if (keyMatchIdx == keyTarget.length()) {
-                                        state = STATE_FIND_COLON;
-                                    }
-                                } else {
-                                    keyMatchIdx = (c == '"') ? 1 : 0;
-                                }
-                                break;
-
-                            case STATE_FIND_COLON:
-                                if (Character.isWhitespace(c)) {
-                                    // skip whitespace
-                                } else if (c == ':') {
-                                    state = STATE_FIND_QUOTE;
-                                } else {
-                                    state = STATE_SEARCH_KEY;
-                                    keyMatchIdx = (c == '"') ? 1 : 0;
-                                }
-                                break;
-
-                            case STATE_FIND_QUOTE:
-                                if (Character.isWhitespace(c)) {
-                                    // skip whitespace
-                                } else if (c == '"') {
-                                    state = STATE_READ_STRING;
-                                    escaped = false;
-                                    unicodeRemaining = 0;
-                                    chunkBuffer.setLength(0);
-                                } else {
-                                    state = STATE_SEARCH_KEY;
-                                    keyMatchIdx = (c == '"') ? 1 : 0;
-                                }
-                                break;
-
-                            case STATE_READ_STRING:
-                                if (escaped) {
-                                    if (unicodeRemaining > 0) {
-                                        unicodeHex.append(c);
-                                        unicodeRemaining--;
-                                        if (unicodeRemaining == 0) {
-                                            try {
-                                                int hexVal = Integer.parseInt(unicodeHex.toString(), 16);
-                                                chunkBuffer.append((char) hexVal);
-                                            } catch (NumberFormatException e) {
-                                                chunkBuffer.append("\\u").append(unicodeHex);
-                                            }
-                                            escaped = false;
-                                        }
-                                    } else {
-                                        switch (c) {
-                                            case 'n': chunkBuffer.append('\n'); escaped = false; break;
-                                            case 't': chunkBuffer.append('\t'); escaped = false; break;
-                                            case 'r': chunkBuffer.append('\r'); escaped = false; break;
-                                            case 'b': chunkBuffer.append('\b'); escaped = false; break;
-                                            case 'f': chunkBuffer.append('\f'); escaped = false; break;
-                                            case '"': chunkBuffer.append('"'); escaped = false; break;
-                                            case '\\': chunkBuffer.append('\\'); escaped = false; break;
-                                            case '/': chunkBuffer.append('/'); escaped = false; break;
-                                            case 'u': 
-                                                unicodeRemaining = 4; 
-                                                unicodeHex.setLength(0); 
-                                                break;
-                                            default:
-                                                chunkBuffer.append('\\').append(c);
-                                                escaped = false;
-                                                break;
-                                        }
-                                    }
-                                } else {
-                                    if (c == '\\') {
-                                        escaped = true;
-                                    } else if (c == '"') {
-                                        if (chunkBuffer.length() > 0) {
-                                            handler.onChunk(chunkBuffer.toString());
-                                        }
-                                        state = STATE_SEARCH_KEY;
-                                        keyMatchIdx = 0;
-                                    } else {
-                                        chunkBuffer.append(c);
-                                    }
-                                }
-                                break;
+                // Read streamed lines
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    Pattern textPattern = Pattern.compile("\"text\"\\s*:\\s*\"([^\"]*)\"");
+                    while ((line = br.readLine()) != null) {
+                        if (line.trim().isEmpty()) continue;
+                        
+                        // Parse text field using pattern matching to avoid partial JSON buffer break exceptions
+                        Matcher matcher = textPattern.matcher(line);
+                        while (matcher.find()) {
+                            String text = matcher.group(1);
+                            // Unescape basic characters
+                            text = text.replace("\\n", "\n")
+                                       .replace("\\t", "\t")
+                                       .replace("\\\"", "\"")
+                                       .replace("\\\\", "\\");
+                            handler.onChunk(text);
                         }
                     }
                 }
@@ -275,89 +197,57 @@ public class GeminiLlmService implements LlmService {
                 String responseText;
 
                 if (promptLower.contains("interview") || promptLower.contains("prepare") || promptLower.contains("coach")) {
-                    responseText = "Hello! Preparing for interviews can feel daunting, but structuring your preparation will make a massive difference.\n\n" +
-                            "## Key Points\n" +
-                            "- **Technical Fundamentals**: Make sure you can comfortably code basic data structures, explain algorithms, and explain architectural choices.\n" +
-                            "- **Spring IoC & Dependency Injection**: Be ready to explain how `@Autowired` works under the hood and beans lifecycle.\n" +
-                            "- **Transaction Management**: Understand `@Transactional` propagation levels and rollback limits.\n" +
-                            "- **OOP Design Patterns**: Be ready to code Singleton, Factory, and Builder patterns.\n" +
-                            "- **STAR Method for Behavioral Questions**: Structure answers using Situation, Task, Action, and Result with quantitative metrics.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- Spring IoC\n" +
-                            "- Dependency Injection\n" +
-                            "- Transaction Propagation\n" +
-                            "- Design Patterns\n" +
-                            "- STAR Methodology";
+                    responseText = "Hello! Preparing for interviews can feel daunting, but structuring your preparation will make a massive difference. Here is a guided preparation framework:\n\n" +
+                            "### 1. Core Technical Fundamentals\n" +
+                            "Make sure you can comfortably code basic data structures, explain algorithms, and explain architectural choices. If you are preparing for a Java/Spring Boot interview, focus on:\n" +
+                            "- **Spring IoC & Dependency Injection**: Explain how `@Autowired` works under the hood.\n" +
+                            "- **Transaction Management**: Understand `@Transactional` propagation limits.\n" +
+                            "- **OOP Design Patterns**: Be ready to code Singleton, Factory, and Builder patterns.\n\n" +
+                            "### 2. Behavioral Questions (The STAR Method)\n" +
+                            "Answer questions about conflicts, team challenges, or project deadlines using this structure:\n" +
+                            "- **S**ituation: Describe the project scope.\n" +
+                            "- **T**ask: Detail the problem you had to solve.\n" +
+                            "- **A**ction: Explain what *you* did to resolve it.\n" +
+                            "- **R**esult: Mention quantitative metrics (e.g. 'reduced latency by 15%').\n\n" +
+                            "Would you like me to run a mock interview query? Tell me your target role and we can start with question one!";
                 } else if (promptLower.contains("skills") || promptLower.contains("gap") || promptLower.contains("improve")) {
-                    responseText = "Let's review your skills gap analysis. Looking at your current profile, you have solid foundations in frontend concepts, but we should optimize your backend capabilities:\n\n" +
-                            "## Key Points\n" +
-                            "- **Advanced SQL & Databases**: Get comfortable with table indexing, explain query plans, and JPA/Hibernate lazy-loading.\n" +
-                            "- **Distributed Systems**: Learn REST API design contract guidelines, gateway patterns, and Redis caching.\n" +
-                            "- **DevOps & Cloud**: Understand container configurations (Dockerfiles) and basic cloud deployment (AWS EC2, RDS).\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- Database Indexing\n" +
-                            "- Hibernate Lazy Loading\n" +
-                            "- Microservices Patterns\n" +
-                            "- Redis Cache\n" +
-                            "- Docker Containerization";
+                    responseText = "Let's review your skills gap analysis. Looking at your current profile, you have solid foundations in frontend concepts (like React and modern layout designs). However, to transition to a strong engineering position, we should optimize your backend and deployment capabilities:\n\n" +
+                            "1. **Advanced SQL & Databases**: Get comfortable with table indexing, explain query plans, and understand how JPA/Hibernate handles lazy-loading.\n" +
+                            "2. **Distributed Systems**: Learn REST contract designs, API gateway patterns, and basic caching (Redis).\n" +
+                            "3. **DevOps & Cloud**: Understand container configurations (Dockerfiles) and basic deployment targets (AWS EC2, RDS).\n\n" +
+                            "I suggest checking out our recommended roadmap inside your dashboard to structure this learning path week-by-week. Which of these three areas do you want to tackle first?";
                 } else if (promptLower.contains("project") || promptLower.contains("portfolio")) {
-                    responseText = "Building portfolio projects is the single best way to prove your engineering capability. Here are premium project blueprints:\n\n" +
-                            "## Key Points\n" +
-                            "- **Collaborative Real-time Board**: Build a workspace management board supporting real-time drag-and-drop updates using WebSockets, JWT, and PostgreSQL.\n" +
-                            "- **Distributed E-Commerce Backend**: Write microservices (Order, Inventory, Product) communicating via FeignClient and Kafka.\n" +
-                            "- **Skills Developed**: Practicing database relations, transaction boundaries, circuit breakers, and state synchronization.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- Real-time WebSockets\n" +
-                            "- Microservices Architecture\n" +
-                            "- Kafka Event Streaming\n" +
-                            "- Resilience4j Circuit Breakers\n" +
-                            "- JWT Security Authentication";
+                    responseText = "Building portfolio projects is the single best way to prove your engineering capability. Here are two custom project blueprints based on your skills:\n\n" +
+                            "### Project 1: Distributed E-Commerce Backend (Java/Spring Boot)\n" +
+                            "- **Concept**: Build an order-processing backend architecture that scales under simulated concurrent loads.\n" +
+                            "- **Skills developed**: Spring Boot Security (JWT), Spring Cloud Gateway, Docker compose configurations, and Redis caching.\n" +
+                            "- **Why it stands out**: Demonstrates understanding of system scaling, transactional integrity, and container deployment.\n\n" +
+                            "### Project 2: Real-time Collaborative Board (React/WebSockets)\n" +
+                            "- **Concept**: A project management layout where boards update in real-time as users drag items.\n" +
+                            "- **Skills developed**: React custom hooks, Websocket handlers, and state synchronization.\n" +
+                            "- **Why it stands out**: Proves advanced React handling, custom network integrations, and smooth visual UI polish.\n\n" +
+                            "Which of these projects would you like to build first? I can help you draft the database schemas or layout architecture!";
                 } else if (promptLower.matches(".*\\b(hi|hello|hey|greetings|hola|wasup)\\b.*")) {
-                    responseText = "Hello! I am your AI Career Mentor. How can I help you with your career goals today?\n\n" +
-                            "## Key Points\n" +
-                            "- **Interactive Coaching**: Ask me to run mock interviews or prepare questions.\n" +
-                            "- **Portfolio Blueprinting**: Request suggestions for custom coding projects.\n" +
-                            "- **Skills Gap Analysis**: We can identify what you need to learn to land your dream role.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- Interview Preparation\n" +
-                            "- Skills Assessment\n" +
-                            "- Project Design\n" +
-                            "- Career Coaching";
+                    responseText = "Hello! I am your AI Career Mentor. How can I help you with your career goals today? You can ask me to run a mock interview, suggest projects, analyze skills, or answer any engineering questions.";
                 } else if (promptLower.contains("garbage") || promptLower.contains("gc") || promptLower.contains("memory")) {
-                    responseText = "Garbage Collection (GC) in Java is the JVM's automatic memory management process.\n\n" +
-                            "## Key Points\n" +
-                            "- **Generational Heap**: Heap memory is divided into Young Generation (Eden, S0, S1) and Old Generation.\n" +
-                            "- **GC Algorithms**: Learn G1 (Garbage First), ZGC (ultra-low latency), and Parallel GC.\n" +
-                            "- **Avoid System.gc()**: Suggests JVM to run GC, but does not guarantee immediate collection. Do not use this in production code.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- JVM Memory Management\n" +
-                            "- Generational Heap\n" +
-                            "- Garbage First (G1) GC\n" +
-                            "- Z Garbage Collector (ZGC)\n" +
-                            "- System.gc()";
+                    responseText = "Garbage Collection (GC) in Java is the JVM's automatic memory management process. It heap-scans for unreferenced objects and frees up space.\n\n" +
+                            "### Key Java GC Concepts:\n" +
+                            "- **Generational Heap**: Divided into Young Generation (Eden, S1, S2) and Old Generation.\n" +
+                            "- **GC Algorithms**: G1 (Garbage First), ZGC (ultra-low latency), and Parallel GC.\n" +
+                            "- **System.gc()**: Suggests JVM to run GC, but does not guarantee immediate collection. Avoid using this in production code.\n\n" +
+                            "Would you like me to quiz you on Java Memory Management or suggest a project practicing garbage tuning?";
                 } else if (promptLower.contains("spring") || promptLower.contains("jpa") || promptLower.contains("database") || promptLower.contains("sql")) {
-                    responseText = "Spring Boot and JPA/Hibernate provide powerful abstraction layers for relational databases.\n\n" +
-                            "## Key Points\n" +
+                    responseText = "Spring Boot and JPA/Hibernate provide powerful abstraction layers for relational databases. Here are key database practices:\n\n" +
                             "- **N+1 Query Problem**: Avoid by using `@EntityGraph` or `JOIN FETCH` queries.\n" +
                             "- **Transaction Propagation**: `@Transactional` defaults to `REQUIRED`, which joins an existing transaction or creates a new one.\n" +
                             "- **Index Optimization**: Always index columns frequently used in WHERE, JOIN, and ORDER BY clauses.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- Spring Boot Data JPA\n" +
-                            "- Hibernate N+1 Problem\n" +
-                            "- EntityGraph & JOIN FETCH\n" +
-                            "- Transaction Propagation REQUIRED\n" +
-                            "- SQL Index Optimization";
+                            "Do you want to discuss Spring Boot REST controllers or database scaling next?";
                 } else if (promptLower.contains("resume") || promptLower.contains("cv") || promptLower.contains("linkedin")) {
-                    responseText = "Optimizing your resume and LinkedIn profile is critical to getting recruiters' attention.\n\n" +
-                            "## Key Points\n" +
-                            "- **Use Action Verbs**: Start bullet points with strong words like 'Designed', 'Architected', or 'Optimized'.\n" +
-                            "- **Quantify Impact**: Write 'resolved 50+ critical errors, reducing application crash rate by 18%' instead of 'fixed bugs'.\n" +
-                            "- **Match Keywords**: Ensure skills in your profile match the target job description.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- Resume Keywords\n" +
-                            "- Action Verbs\n" +
-                            "- Quantitative Impact\n" +
-                            "- Profile Optimization";
+                    responseText = "Optimizing your resume and LinkedIn profile is critical to getting recruiters' attention. Here are three key strategies:\n\n" +
+                            "1. **Use Action Verbs**: Start bullets with strong action words like 'Designed', 'Architected', 'Optimized', or 'Led'.\n" +
+                            "2. **Quantify Impact**: Instead of 'fixed bugs', write 'resolved 50+ critical errors, reducing application crash rate by 18%'.\n" +
+                            "3. **Match Keywords**: Ensure skills in your profile (e.g. React, Spring Boot, Java) match target job descriptions.\n\n" +
+                            "I can help you review a bullet point. Paste one here and we can optimize it together!";
                 } else {
                     // Dynamic fallback extracting user's topic
                     String topic = "your career path";
@@ -370,17 +260,12 @@ public class GeminiLlmService implements LlmService {
                             break;
                         }
                     }
-                    responseText = "I hear you! You asked about **" + topic + "**. Here are key principles to keep in mind:\n\n" +
-                            "## Key Points\n" +
-                            "- **Identify the Core Goal**: How does " + topic + " align with your target career role?\n" +
-                            "- **Hands-on Practice**: Master " + topic + " by writing code, setting up a sample repository, and deploying it.\n" +
-                            "- **Community Review**: Share your design or code with peers, gather comments, and read related articles.\n" +
-                            "- **API Setup Warning**: Make sure to add your `GEMINI_API_KEY` to unlock live conversational answers powered by Gemini.\n\n" +
-                            "## Core Keywords/Concepts\n" +
-                            "- " + topic + "\n" +
-                            "- Goal Alignment\n" +
-                            "- Practical Coding\n" +
-                            "- Gemini API Key Configuration";
+                    responseText = "I hear you! You asked about **" + topic + "**. As your AI Career Mentor, I suggest keeping these principles in mind:\n\n" +
+                            "- **Identify the Core Goal**: How does " + topic + " align with your target career role (e.g. Backend Developer, UI Specialist)?\n" +
+                            "- **Hands-on Practice**: The single best way to master " + topic + " is by writing code, setting up a sample repository, and deploying it.\n" +
+                            "- **Community Review**: Share your design or code with peers on CareerOS, gather comments, and read related articles.\n\n" +
+                            "*(Note: To unlock live unrestricted conversational answers powered by Gemini, make sure to add your `GEMINI_API_KEY` to the environment variables or `application.properties`!)*\n\n" +
+                            "How else can I assist you with " + topic + " or your career preparation?";
                 }
 
                 // Stream the mock text word by word to make it feel natural

@@ -38,7 +38,7 @@ public class GeminiService {
         }
 
         try {
-            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
 
             String prompt = String.format(
                     "You are an expert AI Career Guidance Counselor. Make the suggestions detailed, custom, and highly relevant. All descriptions, reasons, and explanations must be returned as a list of 2-3 key points (each starting with a hyphen '-').\n" +

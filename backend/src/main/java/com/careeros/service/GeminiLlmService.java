@@ -51,7 +51,7 @@ public class GeminiLlmService implements LlmService {
 
         executorService.submit(() -> {
             try {
-                String urlStr = "https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:streamGenerateContent?key=" + apiKey;
+                String urlStr = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:streamGenerateContent?key=" + apiKey;
                 URL url = new URL(urlStr);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");

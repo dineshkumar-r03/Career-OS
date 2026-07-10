@@ -2,15 +2,15 @@
 spring.application.name=connect-backend
 server.port=${PORT:8090}
 
-# Database Configuration
-spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/careeros?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-spring.datasource.username=${SPRING_DATASOURCE_USERNAME:root}
-spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:root123}
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+# Database Configuration (H2 in-memory by default, can be overridden by environment variables)
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:h2:mem:careeros;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:sa}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
+spring.datasource.driver-class-name=${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
 
 # JPA
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.properties.hibernate.dialect=${SPRING_JPA_DIALECT:org.hibernate.dialect.H2Dialect}
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.show-sql=true
 

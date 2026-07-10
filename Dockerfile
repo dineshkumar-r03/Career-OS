@@ -13,6 +13,7 @@ COPY backend/pom.xml ./
 # Copy the built React assets into the backend's static resource directory
 COPY --from=frontend-builder /app/frontend/build ./src/main/resources/static
 COPY backend/src ./src
+RUN cp src/main/resources/application.properties.example src/main/resources/application.properties
 RUN mvn clean package -DskipTests
 
 # Stage 3: Runtime

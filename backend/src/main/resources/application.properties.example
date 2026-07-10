@@ -27,3 +27,7 @@ gemini.api.key=${GEMINI_API_KEY:}
 
 # Path matching strategy for legacy mapping pattern support
 spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+
+# Enable Debug Logging for Gemini Integrations
+logging.level.com.careeros.service.GeminiService=DEBUG
+logging.level.com.careeros.service.GeminiLlmService=DEBUG

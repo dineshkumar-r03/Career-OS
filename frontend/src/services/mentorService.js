@@ -7,7 +7,7 @@ const mentorService = {
   getMessages: (id) => api.get(`/mentor/sessions/${id}/messages`),
   getStreamChatUrl: (sessionId, prompt) => {
     const token = localStorage.getItem('token');
-    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8090/api';
+    const baseUrl = api.defaults.baseURL;
     return `${baseUrl}/mentor/sessions/${sessionId}/chat/stream?prompt=${encodeURIComponent(prompt)}&token=${encodeURIComponent(token)}`;
   }
 };
